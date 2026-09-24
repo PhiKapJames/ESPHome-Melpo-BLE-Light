@@ -94,6 +94,7 @@ async def to_code(config):
     cg.add(var.set_max_queue_size(config[CONF_MAX_QUEUE_SIZE]))
 
     if diagnostics := config.get(CONF_DIAGNOSTICS):
+        cg.add_define("USE_FASTCON_KEY_DIAGNOSTICS")
         await ble_device_base.register_ble_device(var, diagnostics)
 
         listener_conf = diagnostics[CONF_MESH_KEY_LISTENER]
