@@ -13,6 +13,13 @@ logger:
 
 esp32_ble:
 
+esp32_ble_tracker:
+  scan_parameters:
+    active: false
+    interval: 320ms
+    window: 160ms
+    continuous: true
+
 external_components:
   - source:
       type: local
@@ -24,6 +31,12 @@ external_components:
 fastcon:
   id: fastcon_controller
   adv_duration: 1000
+
+  diagnostics:
+    mesh_key_listener:
+      name: "FastCon Mesh Key Listener"
+    detected_mesh_key:
+      name: "FastCon Detected Mesh Key"
 
 light:
   - platform: fastcon
