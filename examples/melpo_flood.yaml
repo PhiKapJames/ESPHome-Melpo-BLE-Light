@@ -50,26 +50,48 @@ light:
     name: "Melpo Flood"
     controller_id: fastcon_controller
 
-    # Per-light FastCon identity/configuration.
     mesh_key: !secret melpo_flood_key
     light_id: 1
+
+    # Initial/default periodic state reassertion.
     refresh_interval: 15min
+
+    # Optional Home Assistant configuration entities for this light.
+    # Both values persist on the ESP32 after they are changed in HA.
+    refresh_control:
+      enabled:
+        name: "Melpo Flood Periodic State Refresh"
+      interval:
+        name: "Melpo Flood Refresh Interval"
+        min_value: 1
+        max_value: 1440
+        step: 1
+        mode: box
 
     supports_cwww: false
     color_interlock: true
     restore_mode: RESTORE_DEFAULT_OFF
     default_transition_length: 0s
 
-  # Additional lights are ordinary additional ESPHome entities. They may use
-  # the same mesh key or a completely different FastCon mesh.
+  # Additional lights are ordinary additional ESPHome entities and get their
+  # own mesh key, interval, and optional HA configuration controls.
   #
   # - platform: fastcon
-  #   id: another_flood
-  #   name: "Another Flood"
+  #   id: rear_flood
+  #   name: "Rear Flood"
   #   controller_id: fastcon_controller
-  #   mesh_key: !secret another_flood_key
+  #   mesh_key: !secret rear_flood_key
   #   light_id: 1
   #   refresh_interval: 30min
+  #   refresh_control:
+  #     enabled:
+  #       name: "Rear Flood Periodic State Refresh"
+  #     interval:
+  #       name: "Rear Flood Refresh Interval"
+  #       min_value: 5
+  #       max_value: 120
+  #       step: 5
+  #       mode: box
   #   supports_cwww: false
   #   color_interlock: true
   #   restore_mode: RESTORE_DEFAULT_OFF

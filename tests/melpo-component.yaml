@@ -26,8 +26,6 @@ fastcon:
   adv_duration: 1000
 
 light:
-  # Two independent normal lights using different mesh keys through one
-  # controller verifies per-light key support.
   - platform: fastcon
     id: melpo_test_light_1
     name: "MELPO CI Test 1"
@@ -35,6 +33,15 @@ light:
     mesh_key: "31323334"
     light_id: 1
     refresh_interval: 15min
+    refresh_control:
+      enabled:
+        name: "CI 1 Periodic State Refresh"
+      interval:
+        name: "CI 1 Refresh Interval"
+        min_value: 1
+        max_value: 1440
+        step: 1
+        mode: box
     supports_cwww: false
     color_interlock: true
     restore_mode: RESTORE_DEFAULT_OFF
@@ -47,12 +54,20 @@ light:
     mesh_key: "35363738"
     light_id: 2
     refresh_interval: 30min
+    refresh_control:
+      enabled:
+        name: "CI 2 Periodic State Refresh"
+      interval:
+        name: "CI 2 Refresh Interval"
+        min_value: 5
+        max_value: 120
+        step: 5
+        mode: box
     supports_cwww: false
     color_interlock: true
     restore_mode: RESTORE_DEFAULT_OFF
     default_transition_length: 0s
 
-  # Group-light compile coverage verifies per-group refresh remains supported.
   - platform: fastcon_group_light
     id: melpo_test_group
     name: "MELPO CI Group"
@@ -61,5 +76,14 @@ light:
     start_light_id: 3
     mask: 0x03
     refresh_interval: 15min
+    refresh_control:
+      enabled:
+        name: "CI Group Periodic State Refresh"
+      interval:
+        name: "CI Group Refresh Interval"
+        min_value: 1
+        max_value: 1440
+        step: 1
+        mode: box
     default_transition_length: 0s
     restore_mode: ALWAYS_OFF

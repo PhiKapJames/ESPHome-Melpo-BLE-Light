@@ -75,17 +75,35 @@ The two lights may use the same mesh key or completely different mesh keys.
 ## Per-light state reassertion
 
 FastCon/brMesh lights do not report authoritative state back to ESPHome.
-Each light therefore supports an optional:
+Each light supports an optional static/default refresh interval:
 
 ```yaml
 refresh_interval: 15min
 ```
 
-The component periodically resends the state ESPHome already believes the
-light should have. The generic default is `never`; configure the interval
-individually on each light.
+The generic default is `never`.
 
-Group lights support the same per-entity `refresh_interval`.
+A light can also expose persistent Home Assistant configuration entities:
+
+```yaml
+refresh_interval: 15min
+refresh_control:
+  enabled:
+    name: "Melpo Flood Periodic State Refresh"
+  interval:
+    name: "Melpo Flood Refresh Interval"
+    min_value: 1
+    max_value: 1440
+    step: 1
+    mode: box
+```
+
+This creates a configuration-category switch and number entity in Home
+Assistant. The switch enables/disables periodic reassertion, and the number
+sets the interval in minutes. Changes are persisted on the ESP32 and survive
+reboots. The YAML `refresh_interval` is the initial/default value.
+
+The same per-entity controls are available on `fastcon_group_light`.
 
 ## Group lights
 
@@ -111,6 +129,15 @@ light:
     start_light_id: 12
     mask: 0x3F
     refresh_interval: 15min
+    refresh_control:
+      enabled:
+        name: "Living Room Periodic State Refresh"
+      interval:
+        name: "Living Room Refresh Interval"
+        min_value: 1
+        max_value: 1440
+        step: 1
+        mode: box
     default_transition_length: 0s
     restore_mode: ALWAYS_OFF
 ```

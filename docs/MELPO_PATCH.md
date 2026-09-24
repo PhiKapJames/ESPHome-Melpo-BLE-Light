@@ -104,13 +104,32 @@ single bridge.
 
 FastCon/brMesh bulbs do not provide authoritative state feedback.
 
-Both `platform: fastcon` and `platform: fastcon_group_light` support:
+Both `platform: fastcon` and `platform: fastcon_group_light` support a
+static/default interval:
 
 ```yaml
 refresh_interval: 15min
 ```
 
 The default is `never`.
+
+They can optionally expose per-entity Home Assistant configuration controls:
+
+```yaml
+refresh_control:
+  enabled:
+    name: "Periodic State Refresh"
+  interval:
+    name: "Refresh Interval"
+    min_value: 1
+    max_value: 1440
+    step: 1
+    mode: box
+```
+
+The enabled switch and interval number are configuration-category entities.
+Their values persist in ESPHome preferences after changes from Home Assistant.
+The YAML `refresh_interval` seeds the initial/default interval.
 
 Every interval, the component resends the exact current ESPHome light state
 without changing or republishing Home Assistant state.

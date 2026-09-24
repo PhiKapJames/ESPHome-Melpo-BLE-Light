@@ -1,5 +1,5 @@
 # Example FastCon/brMesh group lights.
-# Each group owns its mesh key and refresh interval.
+# Each group owns its mesh key, refresh interval, and optional HA refresh controls.
 
 external_components:
   - source: github://PhiKapJames/ESPHome-Melpo-BLE-Light@main
@@ -13,7 +13,6 @@ fastcon:
   id: fastcon_controller
 
 light:
-  # Six consecutive lamps, IDs 1..6
   - platform: fastcon_group_light
     id: office_group
     name: "Office Light"
@@ -22,10 +21,18 @@ light:
     start_light_id: 1
     mask: 0x3F
     refresh_interval: 15min
+    refresh_control:
+      enabled:
+        name: "Office Light Periodic State Refresh"
+      interval:
+        name: "Office Light Refresh Interval"
+        min_value: 1
+        max_value: 1440
+        step: 1
+        mode: box
     default_transition_length: 0s
     restore_mode: ALWAYS_OFF
 
-  # Five consecutive lamps, IDs 7..11; this group can use a different mesh.
   - platform: fastcon_group_light
     id: strip_group
     name: "Light Strip"
@@ -34,5 +41,14 @@ light:
     start_light_id: 7
     mask: 0x1F
     refresh_interval: 30min
+    refresh_control:
+      enabled:
+        name: "Light Strip Periodic State Refresh"
+      interval:
+        name: "Light Strip Refresh Interval"
+        min_value: 5
+        max_value: 120
+        step: 5
+        mode: box
     default_transition_length: 0s
     restore_mode: ALWAYS_OFF
