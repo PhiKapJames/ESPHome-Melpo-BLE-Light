@@ -28,7 +28,7 @@ CONFIG_SCHEMA = cv.All(
             ),
             cv.Optional(CONF_SUPPORTS_CWWW, default=False): cv.boolean,
             cv.Optional(CONF_COLOR_INTERLOCK, default=False): cv.boolean,
-            cv.Optional(CONF_REFRESH_INTERVAL, default="15min"): cv.update_interval,
+            cv.Optional(CONF_REFRESH_INTERVAL, default="never"): cv.update_interval,
         }
     )
     .extend(cv.COMPONENT_SCHEMA)

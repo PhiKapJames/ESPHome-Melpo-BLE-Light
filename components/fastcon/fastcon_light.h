@@ -29,7 +29,7 @@ class FastconLight : public Component, public light::LightOutput {
   FastconController *controller_{nullptr};
   light::LightState *state_{nullptr};
 
-  uint32_t refresh_interval_{15 * 60 * 1000UL};
+  uint32_t refresh_interval_{SCHEDULER_DONT_RUN};
   uint8_t light_id_{0};
   bool supports_cwww_{false};
   bool color_interlock_{false};

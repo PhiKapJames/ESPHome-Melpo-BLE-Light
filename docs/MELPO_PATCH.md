@@ -77,7 +77,7 @@ remain at `DEBUG`.
 ## 5. Periodic state reassertion
 
 FastCon/brMesh bulbs do not provide authoritative state feedback to this
-component. The light platform therefore adds:
+component. The light platform therefore adds a configurable `refresh_interval`. The generic component defaults to `never`; the MELPO Flood Bridge package sets:
 
 ```yaml
 refresh_interval: 15min
