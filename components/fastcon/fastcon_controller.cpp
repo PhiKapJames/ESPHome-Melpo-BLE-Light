@@ -86,16 +86,16 @@ void FastconController::loop() {
       memcpy(&adv_data_raw[adv_data_len], cmd.data.data(), cmd.data.size());
       adv_data_len += cmd.data.size();
 
-      if (ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE) {
-        std::string adv_hex;
-        adv_hex.reserve(adv_data_len * 2);
-        char byte_hex[3];
-        for (uint8_t i = 0; i < adv_data_len; i++) {
-          snprintf(byte_hex, sizeof(byte_hex), "%02X", adv_data_raw[i]);
-          adv_hex += byte_hex;
-        }
-        ESP_LOGVV(TAG, "BLE advertisement (%u bytes): %s", adv_data_len, adv_hex.c_str());
+#if ESPHOME_LOG_LEVEL >= ESPHOME_LOG_LEVEL_VERY_VERBOSE
+      std::string adv_hex;
+      adv_hex.reserve(adv_data_len * 2);
+      char byte_hex[3];
+      for (uint8_t i = 0; i < adv_data_len; i++) {
+        snprintf(byte_hex, sizeof(byte_hex), "%02X", adv_data_raw[i]);
+        adv_hex += byte_hex;
       }
+      ESP_LOGVV(TAG, "BLE advertisement (%u bytes): %s", adv_data_len, adv_hex.c_str());
+#endif
 
       ESP_LOGVV(TAG, "CONFIG_RAW request t=%u len=%u interval=%u-%u type=%d", millis(), adv_data_len,
                 adv_interval_min_, adv_interval_max_, (int) this->adv_params_.adv_type);

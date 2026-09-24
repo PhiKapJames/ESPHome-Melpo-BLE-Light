@@ -1,3 +1,5 @@
+#include <cinttypes>
+
 #include "esphome/core/log.h"
 #include "esphome/components/light/light_state.h"
 #include "fastcon_controller.h"
