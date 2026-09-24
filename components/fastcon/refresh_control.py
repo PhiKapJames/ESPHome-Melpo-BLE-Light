@@ -34,7 +34,9 @@ INTERVAL_SCHEMA = cv.All(
         FastconRefreshNumber,
         entity_category=ENTITY_CATEGORY_CONFIG,
         unit_of_measurement=UNIT_MINUTE,
-    ).extend(
+    )
+    .extend(cv.COMPONENT_SCHEMA)
+    .extend(
         {
             cv.Optional(CONF_MIN_VALUE, default=1): cv.All(
                 cv.float_, cv.Range(min=1)
@@ -55,7 +57,7 @@ REFRESH_CONTROL_SCHEMA = cv.Schema(
             block_inverted=True,
             default_restore_mode="RESTORE_DEFAULT_ON",
             entity_category=ENTITY_CATEGORY_CONFIG,
-        ),
+        ).extend(cv.COMPONENT_SCHEMA),
         cv.Required(CONF_INTERVAL): INTERVAL_SCHEMA,
     }
 )
