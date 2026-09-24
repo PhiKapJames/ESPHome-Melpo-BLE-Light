@@ -20,7 +20,7 @@ class FastconKeyListenerSwitch : public Component, public switch_::Switch {
   }
 
   void dump_config() override {
-    LOG_SWITCH("", "FastCon Mesh Key Listener", this);
+    ESP_LOGCONFIG("fastcon.key_listener", "FastCon Mesh Key Listener '%s'", this->get_name().c_str());
   }
 
  protected:
