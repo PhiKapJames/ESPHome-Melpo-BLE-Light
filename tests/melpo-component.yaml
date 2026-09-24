@@ -1,0 +1,36 @@
+esphome:
+  name: melpo-ci-test
+
+esp32:
+  variant: esp32s3
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+
+esp32_ble:
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: [fastcon]
+
+fastcon:
+  id: fastcon_controller
+  mesh_key: "31323334"
+  adv_duration: 1000
+
+light:
+  - platform: fastcon
+    id: melpo_test_light
+    name: "MELPO CI Test"
+    light_id: 1
+    controller_id: fastcon_controller
+    supports_cwww: false
+    color_interlock: true
+    refresh_interval: 15min
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 0s

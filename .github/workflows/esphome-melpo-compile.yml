@@ -1,0 +1,32 @@
+name: ESPHome MELPO compile
+
+on:
+  push:
+    branches:
+      - melpo
+    paths:
+      - "components/fastcon/**"
+      - "tests/melpo-component.yaml"
+      - ".github/workflows/esphome-melpo-compile.yml"
+  pull_request:
+    paths:
+      - "components/fastcon/**"
+      - "tests/melpo-component.yaml"
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install ESPHome
+        run: pip install "esphome==2026.9.0"
+
+      - name: Compile MELPO component smoke test
+        run: esphome compile tests/melpo-component.yaml
