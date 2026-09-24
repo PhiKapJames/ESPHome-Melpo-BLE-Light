@@ -102,6 +102,8 @@ async def to_code(config):
     if diagnostics := config.get(CONF_DIAGNOSTICS):
         cg.add_define("USE_FASTCON_KEY_DIAGNOSTICS")
         await ble_device_base.register_ble_device(var, diagnostics)
+        tracker = await cg.get_variable(diagnostics[ble_device_base.CONF_BLE_HUB_ID])
+        cg.add(var.set_key_listener_tracker(tracker))
 
         listener_conf = diagnostics[CONF_MESH_KEY_LISTENER]
         listener = await switch.new_switch(listener_conf, var)

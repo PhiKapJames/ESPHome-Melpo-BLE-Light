@@ -26,8 +26,9 @@ class FastconKeyListenerSwitch : public Component, public switch_::Switch {
  protected:
   void write_state(bool state) override {
     this->parent_->set_key_listener_enabled(state);
-    this->publish_state(state);
-    ESP_LOGI("fastcon.key_listener", "FastCon mesh-key listener %s", state ? "enabled" : "disabled");
+    const bool actual_state = this->parent_->is_key_listener_enabled();
+    this->publish_state(actual_state);
+    ESP_LOGI("fastcon.key_listener", "FastCon mesh-key listener %s", actual_state ? "enabled" : "disabled");
   }
 
   FastconController *parent_;

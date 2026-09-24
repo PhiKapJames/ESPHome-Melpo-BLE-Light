@@ -51,6 +51,10 @@ void FastconController::setup() {
 }
 
 void FastconController::loop() {
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
+  this->service_key_listener_scan_();
+#endif
+
   const uint32_t now = millis();
 
   switch (adv_state_) {
@@ -224,6 +228,95 @@ void FastconController::gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_
 
 
 #ifdef USE_FASTCON_KEY_DIAGNOSTICS
+void FastconController::set_key_listener_enabled(bool enabled) {
+  if (!enabled) {
+    this->key_listener_enabled_ = false;
+
+    if (this->key_listener_tracker_ == nullptr || !this->key_listener_started_scan_) {
+      this->key_listener_started_scan_ = false;
+      this->key_listener_stop_pending_ = false;
+      return;
+    }
+
+    const auto state = this->key_listener_tracker_->get_scanner_state();
+    if (state == esp32_ble_tracker::ScannerState::RUNNING ||
+        state == esp32_ble_tracker::ScannerState::FAILED) {
+      this->key_listener_tracker_->stop_scan();
+      this->key_listener_started_scan_ = false;
+      this->key_listener_stop_pending_ = false;
+    } else if (state == esp32_ble_tracker::ScannerState::STARTING) {
+      // ESPHome cannot stop a scan while its start request is still in flight.
+      // Defer the stop until the tracker reaches RUNNING.
+      this->key_listener_stop_pending_ = true;
+    } else {
+      this->key_listener_started_scan_ = false;
+      this->key_listener_stop_pending_ = false;
+    }
+    return;
+  }
+
+  if (this->key_listener_tracker_ == nullptr) {
+    ESP_LOGW(TAG, "Cannot enable FastCon mesh-key listener: no BLE tracker is bound");
+    this->key_listener_enabled_ = false;
+    return;
+  }
+
+  this->key_listener_enabled_ = true;
+  this->key_listener_stop_pending_ = false;
+
+  const auto state = this->key_listener_tracker_->get_scanner_state();
+  if (state == esp32_ble_tracker::ScannerState::IDLE) {
+    this->key_listener_tracker_->start_scan();
+    this->key_listener_started_scan_ = true;
+    ESP_LOGI(TAG, "FastCon mesh-key listener started BLE scan");
+  } else if (state == esp32_ble_tracker::ScannerState::RUNNING ||
+             state == esp32_ble_tracker::ScannerState::STARTING) {
+    // Another component/user already owns this scan. Listen to it, but do not
+    // stop it when FastCon capture ends.
+    this->key_listener_started_scan_ = false;
+    ESP_LOGI(TAG, "FastCon mesh-key listener using existing BLE scan");
+  } else {
+    ESP_LOGW(TAG, "Cannot enable FastCon mesh-key listener while BLE scanner is not idle/running");
+    this->key_listener_enabled_ = false;
+  }
+}
+
+void FastconController::service_key_listener_scan_() {
+  if (!this->key_listener_stop_pending_ || this->key_listener_tracker_ == nullptr)
+    return;
+
+  const auto state = this->key_listener_tracker_->get_scanner_state();
+  if (state == esp32_ble_tracker::ScannerState::RUNNING ||
+      state == esp32_ble_tracker::ScannerState::FAILED) {
+    this->key_listener_tracker_->stop_scan();
+    this->key_listener_started_scan_ = false;
+    this->key_listener_stop_pending_ = false;
+  } else if (state == esp32_ble_tracker::ScannerState::IDLE) {
+    this->key_listener_started_scan_ = false;
+    this->key_listener_stop_pending_ = false;
+  }
+}
+
+void FastconController::on_scan_end() {
+  // A non-continuous scan can end naturally (default duration is 5 minutes).
+  // If FastCon started that scan and no key was found, end the one-shot
+  // diagnostic session so the HA switch accurately reflects reality.
+  if (!this->key_listener_enabled_ || !this->key_listener_started_scan_)
+    return;
+
+  this->key_listener_enabled_ = false;
+  this->key_listener_started_scan_ = false;
+  this->key_listener_stop_pending_ = false;
+
+  ESP_LOGI(TAG, "FastCon mesh-key listener scan ended without detecting a key");
+  if (this->key_listener_switch_ != nullptr)
+    this->key_listener_switch_->publish_state(false);
+}
+#else
+void FastconController::on_scan_end() {}
+#endif
+
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
 bool FastconController::decode_fastcon_rf_body_(const std::vector<uint8_t> &rf_payload,
                                                 std::array<uint8_t, 16> &body) const {
   // Standard FastCon commands expose 24 bytes after the 0xFFF0 manufacturer ID:
@@ -366,9 +459,9 @@ void FastconController::publish_detected_key_(const std::array<uint8_t, 4> &key,
   if (this->detected_key_text_sensor_ != nullptr)
     this->detected_key_text_sensor_->publish_state(key_hex);
 
-  // Capture is intentionally one-shot. The user can re-enable it for another
-  // registration/control event without leaving key parsing enabled indefinitely.
-  this->key_listener_enabled_ = false;
+  // Capture is intentionally one-shot. Stop a scan only when FastCon started
+  // it; scans owned by another component/user are left alone.
+  this->set_key_listener_enabled(false);
   if (this->key_listener_switch_ != nullptr)
     this->key_listener_switch_->publish_state(false);
 }

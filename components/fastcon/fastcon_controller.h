@@ -14,6 +14,7 @@
 #include "esphome/core/component.h"
 
 #ifdef USE_FASTCON_KEY_DIAGNOSTICS
+#include "esphome/components/esp32_ble_tracker/esp32_ble_tracker.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #endif
 
@@ -33,6 +34,7 @@ class FastconController : public Component, public ble_device_base::ESPBTDeviceL
 
   void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
   bool parse_device(const ble_device_base::ESPBTDevice &device) override;
+  void on_scan_end() override;
 
   std::vector<uint8_t> get_light_data(light::LightState *state);
   std::vector<uint8_t> get_white_light_data(light::LightState *state);
@@ -63,8 +65,9 @@ class FastconController : public Component, public ble_device_base::ESPBTDeviceL
   void set_adv_gap(uint16_t val) { adv_gap_ = val; }
 
 #ifdef USE_FASTCON_KEY_DIAGNOSTICS
-  void set_key_listener_enabled(bool enabled) { key_listener_enabled_ = enabled; }
+  void set_key_listener_enabled(bool enabled);
   bool is_key_listener_enabled() const { return key_listener_enabled_; }
+  void set_key_listener_tracker(esp32_ble_tracker::ESP32BLETracker *tracker) { key_listener_tracker_ = tracker; }
   void set_key_listener_switch(FastconKeyListenerSwitch *listener) { key_listener_switch_ = listener; }
   void set_detected_key_text_sensor(text_sensor::TextSensor *sensor) { detected_key_text_sensor_ = sensor; }
 #endif
@@ -104,6 +107,7 @@ class FastconController : public Component, public ble_device_base::ESPBTDeviceL
   bool recover_provision_key_(const std::array<uint8_t, 16> &body, std::array<uint8_t, 4> &key) const;
   bool recover_control_key_(const std::array<uint8_t, 16> &body, std::array<uint8_t, 4> &key) const;
   void publish_detected_key_(const std::array<uint8_t, 4> &key, const char *source);
+  void service_key_listener_scan_();
 #endif
 
   uint16_t adv_interval_min_{0x20};
@@ -113,6 +117,9 @@ class FastconController : public Component, public ble_device_base::ESPBTDeviceL
 
 #ifdef USE_FASTCON_KEY_DIAGNOSTICS
   bool key_listener_enabled_{false};
+  bool key_listener_started_scan_{false};
+  bool key_listener_stop_pending_{false};
+  esp32_ble_tracker::ESP32BLETracker *key_listener_tracker_{nullptr};
   FastconKeyListenerSwitch *key_listener_switch_{nullptr};
   text_sensor::TextSensor *detected_key_text_sensor_{nullptr};
 #endif
