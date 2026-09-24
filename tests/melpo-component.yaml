@@ -17,21 +17,49 @@ external_components:
   - source:
       type: local
       path: ../components
-    components: [fastcon]
+    components:
+      - fastcon
+      - fastcon_group_light
 
 fastcon:
   id: fastcon_controller
-  mesh_key: "31323334"
   adv_duration: 1000
 
 light:
+  # Two independent normal lights using different mesh keys through one
+  # controller verifies per-light key support.
   - platform: fastcon
-    id: melpo_test_light
-    name: "MELPO CI Test"
-    light_id: 1
+    id: melpo_test_light_1
+    name: "MELPO CI Test 1"
     controller_id: fastcon_controller
+    mesh_key: "31323334"
+    light_id: 1
+    refresh_interval: 15min
     supports_cwww: false
     color_interlock: true
-    refresh_interval: 15min
     restore_mode: RESTORE_DEFAULT_OFF
     default_transition_length: 0s
+
+  - platform: fastcon
+    id: melpo_test_light_2
+    name: "MELPO CI Test 2"
+    controller_id: fastcon_controller
+    mesh_key: "35363738"
+    light_id: 2
+    refresh_interval: 30min
+    supports_cwww: false
+    color_interlock: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 0s
+
+  # Group-light compile coverage verifies per-group refresh remains supported.
+  - platform: fastcon_group_light
+    id: melpo_test_group
+    name: "MELPO CI Group"
+    controller_id: fastcon_controller
+    mesh_key: "31323334"
+    start_light_id: 3
+    mask: 0x03
+    refresh_interval: 15min
+    default_transition_length: 0s
+    restore_mode: ALWAYS_OFF

@@ -4,6 +4,28 @@ The `main` branch contains the MELPO release patch set. The fork's `dev`
 branch remains aligned with `scross01/esphome-fastcon@dev` for upstream
 tracking.
 
+## Configuration architecture
+
+This fork is used as an ESPHome **external component**. It does not provide or
+require a remote device package.
+
+The shared `fastcon:` controller owns BLE transport concerns:
+
+- advertisement interval;
+- advertisement duration;
+- advertisement gap;
+- command queue.
+
+Each light/group owns entity-specific FastCon configuration:
+
+- mesh key;
+- light/group ID;
+- refresh interval;
+- light capabilities;
+- restore/transition behavior.
+
+This lets one controller service multiple FastCon meshes.
+
 ## 1. Correct manufacturer AD length
 
 Upstream uses:
@@ -66,51 +88,48 @@ This replaces the earlier fixed-delay experiment.
 
 **Status:** required; keep.
 
-## 4. Diagnostics
+## 4. Per-entity mesh keys
 
-Detailed raw advertisement and GAP sequencing logs use `VERY_VERBOSE`.
-Normal startup configuration remains at `CONFIG`; normal light operations
-remain at `DEBUG`.
+Upstream normal lights stored the mesh key on the shared controller. Group
+lights already stored it on the entity.
 
-**Status:** keep, but do not normally run the device at VERY_VERBOSE unless
-diagnosing protocol/radio behavior.
+This fork makes the behavior consistent: normal lights also require
+`mesh_key` on each `platform: fastcon` entity. The controller is transport
+only.
 
-## 5. Periodic state reassertion
+This supports multiple lights that belong to different FastCon meshes through a
+single bridge.
 
-FastCon/brMesh bulbs do not provide authoritative state feedback to this
-component. The FastCon light platform adds a configurable
-`refresh_interval`.
+## 5. Per-entity periodic state reassertion
 
-The generic component defaults to:
+FastCon/brMesh bulbs do not provide authoritative state feedback.
+
+Both `platform: fastcon` and `platform: fastcon_group_light` support:
 
 ```yaml
-refresh_interval: never
+refresh_interval: 15min
 ```
 
-The MELPO device configuration passes a 15-minute interval through package
-`vars`.
+The default is `never`.
 
 Every interval, the component resends the exact current ESPHome light state
-without changing or republishing the Home Assistant state.
+without changing or republishing Home Assistant state.
 
 A refresh is skipped if:
 
 - a light transition is currently active, or
-- the FastCon command queue is already busy.
+- the FastCon controller queue is busy.
 
-**Status:** MELPO reliability feature; keep.
+## 6. Diagnostics
 
-## Configuration choices that are not component patches
+Detailed advertisement and GAP sequencing logs use `VERY_VERBOSE`.
 
-The MELPO package also uses:
+**Status:** keep, but use VERY_VERBOSE only while diagnosing protocol/radio
+behavior.
 
-- `adv_duration: 1000` — known-working hardware value; upstream default remains unchanged.
-- `supports_cwww: false` — already supported upstream.
-- `color_interlock: true` — already supported upstream.
-- `default_transition_length: 0s` — avoids transitional command floods.
-- `restore_mode: RESTORE_DEFAULT_OFF`.
-- passive BLE diagnostic scanning.
+## Device-specific settings
 
-Standard ESPHome device configuration and site-specific values are intentionally
-not part of the public package. This includes Wi-Fi credentials, API encryption,
-OTA setup, logger settings, and `wifi.output_power`.
+Settings such as `adv_duration: 1000`, Wi-Fi output power, network
+credentials, API encryption, logging level, light IDs, mesh keys, restore
+modes, and refresh intervals belong in the user's ESPHome device YAML, not in
+this repository's component defaults.
