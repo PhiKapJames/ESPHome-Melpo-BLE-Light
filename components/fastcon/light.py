@@ -6,8 +6,8 @@ from esphome.components import light
 from esphome.const import CONF_COLOR_INTERLOCK, CONF_LIGHT_ID, CONF_OUTPUT_ID
 from .fastcon_controller import FastconController
 
-# New config key to toggle RGBCW capability per-entity
 CONF_SUPPORTS_CWWW = "supports_cwww"
+CONF_REFRESH_INTERVAL = "refresh_interval"
 
 DEPENDENCIES = ["esp32_ble"]
 AUTO_LOAD = ["light"]
@@ -23,13 +23,17 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(FastconLight),
             cv.Required(CONF_LIGHT_ID): cv.int_range(min=1, max=255),
-            cv.Optional(CONF_CONTROLLER_ID, default="fastcon_controller"): cv.use_id(FastconController),
+            cv.Optional(CONF_CONTROLLER_ID, default="fastcon_controller"): cv.use_id(
+                FastconController
+            ),
             cv.Optional(CONF_SUPPORTS_CWWW, default=False): cv.boolean,
             cv.Optional(CONF_COLOR_INTERLOCK, default=False): cv.boolean,
+            cv.Optional(CONF_REFRESH_INTERVAL, default="15min"): cv.update_interval,
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
 )
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_OUTPUT_ID], config[CONF_LIGHT_ID])
@@ -45,3 +49,5 @@ async def to_code(config):
 
     if config.get(CONF_SUPPORTS_CWWW):
         cg.add(var.set_supports_cwww(True))
+
+    cg.add(var.set_refresh_interval(config[CONF_REFRESH_INTERVAL]))
