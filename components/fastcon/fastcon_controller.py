@@ -3,7 +3,6 @@ import esphome.config_validation as cv
 from esphome.components import ble_device_base, esp32_ble, switch, text_sensor
 from esphome.const import CONF_ID, ENTITY_CATEGORY_DIAGNOSTIC
 
-AUTO_LOAD = ["ble_device_base", "switch", "text_sensor"]
 DEPENDENCIES = ["esp32_ble"]
 
 CONF_ADV_INTERVAL_MIN = "adv_interval_min"
@@ -21,6 +20,13 @@ DEFAULT_ADV_INTERVAL_MAX = 0x40
 DEFAULT_ADV_DURATION = 50
 DEFAULT_ADV_GAP = 10
 DEFAULT_MAX_QUEUE_SIZE = 100
+
+def AUTO_LOAD(config):
+    auto_load = ["ble_device_base"]
+    if CONF_DIAGNOSTICS in config:
+        auto_load.extend(["switch", "text_sensor"])
+    return auto_load
+
 
 fastcon_ns = cg.esphome_ns.namespace("fastcon")
 FastconController = fastcon_ns.class_(
