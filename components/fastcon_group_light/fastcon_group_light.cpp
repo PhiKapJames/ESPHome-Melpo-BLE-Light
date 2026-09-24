@@ -1,6 +1,7 @@
 #include "fastcon_group_light.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <cmath>
 
 #include "esphome/core/hal.h"
@@ -24,6 +25,11 @@ void FastconGroupLight::dump_config() {
   ESP_LOGCONFIG(TAG, "  Start light ID: %u", start_light_id_);
   ESP_LOGCONFIG(TAG, "  Mask: 0x%02X", mask_);
   ESP_LOGCONFIG(TAG, "  Color temperature: 153-500 mired");
+  if (this->refresh_interval_ == SCHEDULER_DONT_RUN) {
+    ESP_LOGCONFIG(TAG, "  State refresh: disabled");
+  } else {
+    ESP_LOGCONFIG(TAG, "  State refresh: %" PRIu32 "s", this->refresh_interval_ / 1000);
+  }
 }
 
 light::LightTraits FastconGroupLight::get_traits() {
@@ -32,6 +38,31 @@ light::LightTraits FastconGroupLight::get_traits() {
   traits.set_min_mireds(153.0f);
   traits.set_max_mireds(500.0f);
   return traits;
+}
+
+void FastconGroupLight::setup_state(light::LightState *state) {
+  this->state_ = state;
+
+  if (this->refresh_interval_ == SCHEDULER_DONT_RUN)
+    return;
+
+  this->set_interval("state_refresh", this->refresh_interval_, [this]() {
+    if (this->state_ == nullptr || this->controller_ == nullptr)
+      return;
+
+    if (this->state_->is_transformer_active()) {
+      ESP_LOGV(TAG, "Skipping group refresh: transition active");
+      return;
+    }
+
+    if (!this->controller_->is_queue_empty()) {
+      ESP_LOGV(TAG, "Skipping group refresh: FastCon queue busy");
+      return;
+    }
+
+    ESP_LOGD(TAG, "Reasserting current group state start=%u mask=0x%02X", this->start_light_id_, this->mask_);
+    this->write_state(this->state_);
+  });
 }
 
 std::vector<uint8_t> FastconGroupLight::build_encrypted_body_(

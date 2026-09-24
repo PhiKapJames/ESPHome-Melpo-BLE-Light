@@ -297,7 +297,8 @@ std::vector<uint8_t> FastconController::get_white_light_data(light::LightState *
 }
 
 std::vector<uint8_t> FastconController::single_control(uint32_t light_id_,
-                                                       const std::vector<uint8_t> &light_data) {
+                                                       const std::vector<uint8_t> &light_data,
+                                                       const std::array<uint8_t, 4> &mesh_key) {
   std::vector<uint8_t> result_data(12);
   result_data[0] = 2 | (((0x0FFFFFF & (light_data.size() + 1)) << 4));
   result_data[1] = light_id_;
@@ -307,11 +308,13 @@ std::vector<uint8_t> FastconController::single_control(uint32_t light_id_,
   const std::string hex(hex_vec.begin(), hex_vec.end());
   ESP_LOGVV(TAG, "Inner Payload v%s (%zu bytes): %s", FASTCON_VERSION, result_data.size(), hex.c_str());
 
-  return this->generate_command(5, light_id_, result_data, true);
+  return this->generate_command(5, light_id_, result_data, mesh_key, true);
 }
 
 std::vector<uint8_t> FastconController::generate_command(uint8_t n, uint32_t light_id_,
-                                                          const std::vector<uint8_t> &data, bool forward) {
+                                                          const std::vector<uint8_t> &data,
+                                                          const std::array<uint8_t, 4> &mesh_key,
+                                                          bool forward) {
   static uint8_t sequence = 0;
 
   std::vector<uint8_t> body(data.size() + 4);
@@ -321,7 +324,7 @@ std::vector<uint8_t> FastconController::generate_command(uint8_t n, uint32_t lig
   body[1] = sequence++;
   if (sequence >= 255)
     sequence = 1;
-  body[2] = this->mesh_key_[3];
+  body[2] = mesh_key[3];
 
   std::copy(data.begin(), data.end(), body.begin() + 4);
 
@@ -337,7 +340,7 @@ std::vector<uint8_t> FastconController::generate_command(uint8_t n, uint32_t lig
   }
 
   for (size_t i = 0; i < data.size(); i++) {
-    body[4 + i] = this->mesh_key_[i & 3] ^ body[4 + i];
+    body[4 + i] = mesh_key[i & 3] ^ body[4 + i];
   }
 
   std::vector<uint8_t> addr = {DEFAULT_BLE_FASTCON_ADDRESS.begin(), DEFAULT_BLE_FASTCON_ADDRESS.end()};

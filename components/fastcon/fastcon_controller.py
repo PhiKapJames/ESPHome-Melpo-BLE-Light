@@ -2,11 +2,9 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import esp32_ble
 from esphome.const import CONF_ID
-from esphome.core import HexInt
 
 DEPENDENCIES = ["esp32_ble"]
 
-CONF_MESH_KEY = "mesh_key"
 CONF_ADV_INTERVAL_MIN = "adv_interval_min"
 CONF_ADV_INTERVAL_MAX = "adv_interval_max"
 CONF_ADV_DURATION = "adv_duration"
@@ -19,20 +17,6 @@ DEFAULT_ADV_DURATION = 50
 DEFAULT_ADV_GAP = 10
 DEFAULT_MAX_QUEUE_SIZE = 100
 
-
-def validate_hex_bytes(value):
-    if isinstance(value, str):
-        value = value.replace(" ", "")
-        if len(value) != 8:
-            raise cv.Invalid("Mesh key must be exactly 4 bytes (8 hex characters)")
-
-        try:
-            return HexInt(int(value, 16))
-        except ValueError as err:
-            raise cv.Invalid(f"Invalid hex value: {err}")
-    raise cv.Invalid("Mesh key must be a string")
-
-
 fastcon_ns = cg.esphome_ns.namespace("fastcon")
 FastconController = fastcon_ns.class_("FastconController", cg.Component)
 
@@ -42,7 +26,6 @@ CONFIG_SCHEMA = cv.Schema(
             FastconController
         ),
         cv.GenerateID(esp32_ble.CONF_BLE_ID): cv.use_id(esp32_ble.ESP32BLE),
-        cv.Required(CONF_MESH_KEY): validate_hex_bytes,
         cv.Optional(
             CONF_ADV_INTERVAL_MIN, default=DEFAULT_ADV_INTERVAL_MIN
         ): cv.uint16_t,
@@ -65,10 +48,6 @@ async def to_code(config):
     esp32_ble.register_gap_event_handler(parent, var)
 
     await cg.register_component(var, config)
-
-    mesh_key = config[CONF_MESH_KEY]
-    key_bytes = [(mesh_key >> (i * 8)) & 0xFF for i in range(3, -1, -1)]
-    cg.add(var.set_mesh_key(key_bytes))
 
     if config[CONF_ADV_INTERVAL_MAX] < config[CONF_ADV_INTERVAL_MIN]:
         raise cv.Invalid(

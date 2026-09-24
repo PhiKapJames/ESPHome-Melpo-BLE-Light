@@ -1,9 +1,10 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
-#include "esphome/core/component.h"
 #include "esphome/components/light/light_output.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace fastcon {
@@ -16,6 +17,7 @@ class FastconLight : public Component, public light::LightOutput {
   explicit FastconLight(int light_id) { this->light_id_ = static_cast<uint8_t>(light_id); }
 
   void set_controller(FastconController *c) { controller_ = c; }
+  void set_mesh_key(std::array<uint8_t, 4> key) { mesh_key_ = key; }
   void set_light_id(uint8_t id) { light_id_ = id; }
   void set_supports_cwww(bool v) { supports_cwww_ = v; }
   void set_color_interlock(bool v) { color_interlock_ = v; }
@@ -28,6 +30,7 @@ class FastconLight : public Component, public light::LightOutput {
  protected:
   FastconController *controller_{nullptr};
   light::LightState *state_{nullptr};
+  std::array<uint8_t, 4> mesh_key_{};
 
   uint32_t refresh_interval_{SCHEDULER_DONT_RUN};
   uint8_t light_id_{0};

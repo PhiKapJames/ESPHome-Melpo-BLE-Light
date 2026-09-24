@@ -11,6 +11,7 @@ CONF_CONTROLLER_ID = "controller_id"
 CONF_MESH_KEY = "mesh_key"
 CONF_START_LIGHT_ID = "start_light_id"
 CONF_MASK = "mask"
+CONF_REFRESH_INTERVAL = "refresh_interval"
 
 fastcon_ns = cg.esphome_ns.namespace("fastcon")
 FastconController = fastcon_ns.class_("FastconController", cg.Component)
@@ -41,6 +42,7 @@ CONFIG_SCHEMA = (
         cv.Required(CONF_MESH_KEY): validate_hex_bytes,
         cv.Required(CONF_START_LIGHT_ID): cv.int_range(min=1, max=255),
         cv.Required(CONF_MASK): cv.int_range(min=1, max=255),
+        cv.Optional(CONF_REFRESH_INTERVAL, default="never"): cv.update_interval,
     })
     .extend(cv.COMPONENT_SCHEMA)
 )
@@ -61,3 +63,4 @@ async def to_code(config):
 
     cg.add(var.set_start_light_id(config[CONF_START_LIGHT_ID]))
     cg.add(var.set_mask(config[CONF_MASK]))
+    cg.add(var.set_refresh_interval(config[CONF_REFRESH_INTERVAL]))

@@ -8,8 +8,8 @@
 #include <esp_gap_ble_api.h>
 
 #include "esphome/components/esp32_ble/ble.h"
-#include "esphome/core/component.h"
 #include "esphome/components/light/light_state.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace fastcon {
@@ -25,7 +25,8 @@ class FastconController : public Component {
 
   std::vector<uint8_t> get_light_data(light::LightState *state);
   std::vector<uint8_t> get_white_light_data(light::LightState *state);
-  std::vector<uint8_t> single_control(uint32_t addr, const std::vector<uint8_t> &light_data);
+  std::vector<uint8_t> single_control(uint32_t addr, const std::vector<uint8_t> &light_data,
+                                      const std::array<uint8_t, 4> &mesh_key);
 
   void queueCommand(uint32_t light_id_, const std::vector<uint8_t> &data);
 
@@ -40,7 +41,6 @@ class FastconController : public Component {
   }
   void set_max_queue_size(size_t size) { max_queue_size_ = size; }
 
-  void set_mesh_key(std::array<uint8_t, 4> key) { mesh_key_ = key; }
   void set_adv_interval_min(uint16_t val) { adv_interval_min_ = val; }
   void set_adv_interval_max(uint16_t val) {
     adv_interval_max_ = val;
@@ -77,9 +77,7 @@ class FastconController : public Component {
   esp_ble_adv_params_t adv_params_{};
 
   std::vector<uint8_t> generate_command(uint8_t n, uint32_t light_id_, const std::vector<uint8_t> &data,
-                                        bool forward = true);
-
-  std::array<uint8_t, 4> mesh_key_{};
+                                        const std::array<uint8_t, 4> &mesh_key, bool forward = true);
 
   uint16_t adv_interval_min_{0x20};
   uint16_t adv_interval_max_{0x40};

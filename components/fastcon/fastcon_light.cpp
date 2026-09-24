@@ -92,7 +92,7 @@ void FastconLight::write_state(light::LightState *state) {
     light_bytes = this->controller_->get_light_data(state);
   }
 
-  std::vector<uint8_t> payload = this->controller_->single_control(this->light_id_, light_bytes);
+  std::vector<uint8_t> payload = this->controller_->single_control(this->light_id_, light_bytes, this->mesh_key_);
   this->controller_->queueCommand(this->light_id_, payload);
 
   ESP_LOGD(TAG, "Queued state v%s: light_id=%u, payload_len=%d", FASTCON_VERSION, (unsigned) this->light_id_,
