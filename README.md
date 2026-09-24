@@ -167,3 +167,49 @@ See [docs/REFERENCES.md](docs/REFERENCES.md).
 ## License
 
 MIT, following the upstream project. See [LICENSE](LICENSE).
+
+
+## Mesh-key diagnostics
+
+The controller can optionally expose a one-shot mesh-key listener in Home
+Assistant's **Diagnostic** section.
+
+```yaml
+esp32_ble:
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: false
+    interval: 320ms
+    window: 160ms
+    continuous: true
+
+fastcon:
+  id: fastcon_controller
+  adv_duration: 1000
+
+  diagnostics:
+    mesh_key_listener:
+      name: "FastCon Mesh Key Listener"
+
+    detected_mesh_key:
+      name: "FastCon Detected Mesh Key"
+```
+
+Usage:
+
+1. Turn on **FastCon Mesh Key Listener**.
+2. To recover an existing key, use the official app to send a normal
+   single-light command.
+3. To recover a newly assigned key after factory reset, enable the listener
+   before registering the light with the official app.
+4. A validated key is published as eight hexadecimal characters in
+   **FastCon Detected Mesh Key**.
+5. The listener automatically switches itself back off after a key is found.
+
+The listener recognizes both validated normal control traffic and validated
+FastCon provisioning traffic. It is based on over-the-air BLE advertisements,
+not Android logcat.
+
+See [docs/PROVISIONING.md](docs/PROVISIONING.md) for protocol details,
+validation rules, and current limitations.
