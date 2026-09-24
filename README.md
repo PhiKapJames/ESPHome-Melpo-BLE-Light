@@ -3,85 +3,112 @@
 This fork adds the changes needed for a MELPO RGB flood light to work reliably
 with ESPHome over the BroadLink FastCon / brMesh BLE-advertisement protocol.
 
-## Branches
+## Branch model
 
-- **`dev`** — keep aligned with upstream `scross01/esphome-fastcon@dev`.
-- **`melpo`** — MELPO-specific patches and the reusable Flood Bridge package.
+- **`dev`** — tracks `scross01/esphome-fastcon@dev` as closely as possible.
+- **`main`** — the MELPO release branch used by the actual bridge.
 
-This keeps GitHub's native fork relationship useful: upstream changes can be
-reviewed on `dev`, while the MELPO delta stays small and explicit.
+The MELPO-specific changes are therefore combined on `main`, while `dev`
+remains useful for native GitHub upstream comparisons and future merges.
 
-## MELPO additions
-
-The `melpo` branch adds:
+## MELPO additions on main
 
 - corrected FastCon manufacturer AD framing;
 - MELPO-validated advertising type/flags;
-- an ESP-IDF GAP-event-driven advertising state machine;
+- ESP-IDF GAP-event-driven advertising lifecycle;
 - VERY_VERBOSE packet/GAP diagnostics;
 - configurable periodic state reassertion for bulbs that do not report state;
-- a reusable ESPHome package for the ESP32-S3 MELPO Flood Bridge.
+- reusable ESPHome package for the ESP32-S3 MELPO Flood Bridge;
+- ESPHome 2026.9 compile/package smoke tests.
 
-See [docs/MELPO_PATCH.md](docs/MELPO_PATCH.md) for the keep/drop rationale for
-each change.
+See [docs/MELPO_PATCH.md](docs/MELPO_PATCH.md) for the rationale for each
+retained change.
 
-## Private local configuration
+## ESPHome configuration split
 
-Credentials, mesh key, light/site identifiers you consider private, and
-deployment RF settings such as `wifi.output_power` should stay in your local
-ESPHome YAML.
+The public package contains only reusable bridge/hardware/FastCon configuration.
 
-Minimal local configuration:
+Standard ESPHome device settings stay in your local YAML:
+
+- `esphome:` name/friendly name
+- `logger:`
+- `api:` and its encryption key
+- `ota:`
+- `wifi:` and Wi-Fi secrets
+- deployment-specific Wi-Fi RF tuning such as `output_power`
+
+FastCon-specific values are passed to the package using ESPHome package
+`vars`, which keeps the public package reusable without wrapping normal
+ESPHome secrets in custom substitutions.
+
+Example local configuration:
 
 ```yaml
-substitutions:
-  melpo_wifi_ssid: !secret wifi_ssid
-  melpo_wifi_password: !secret wifi_password
-  melpo_api_encryption_key: !secret api_encryption_key
-  melpo_flood_key: !secret melpo_flood_key
-  melpo_light_id: "1"
-  melpo_refresh_interval: "15min"
+esphome:
+  name: melpo-flood-bridge
+  friendly_name: Melpo Flood Bridge
 
 packages:
   melpo_flood_bridge:
     url: https://github.com/PhiKapJames/ESPHome-Melpo-BLE-Light
-    files:
-      - packages/melpo-flood-bridge.yaml
-    ref: melpo
+    ref: main
     refresh: 1h
+    files:
+      - path: packages/melpo-flood-bridge.yaml
+        vars:
+          melpo_flood_key: !secret melpo_flood_key
+          melpo_light_id: "1"
+          melpo_light_name: "Melpo Flood"
+          melpo_refresh_interval: "15min"
+
+logger:
+  level: VERY_VERBOSE
+  initial_level: DEBUG
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
 
 wifi:
-  # Set output_power here in your private/local file.
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Add your site-specific output_power here.
 ```
 
-The refresh interval defaults to 15 minutes and can be overridden locally.
-Use `melpo_refresh_interval: "never"` to disable periodic reassertion.
+The MELPO package sets a 15-minute refresh only because the local config passes
+that value. The generic FastCon light component itself defaults
+`refresh_interval` to `never`.
 
-## MELPO package behavior
+## Public package behavior
 
-The public package currently targets:
+The package currently provides:
 
-- ESP32-S3
-- 4 MB flash
-- ESP-IDF
+- ESP32-S3 / 4 MB / ESP-IDF hardware definition
 - passive FastCon diagnostic scanning
-- FastCon manufacturer ID `FFF0`
-- one MELPO light entity using upstream `supports_cwww: false` and
-  `color_interlock: true`
+- manufacturer ID `FFF0` diagnostic capture
+- the patched FastCon component from this repository's `main`
+- known-working MELPO advertisement duration of 1000 ms
+- `supports_cwww: false`
+- `color_interlock: true`
 - zero default transition length
 - `RESTORE_DEFAULT_OFF`
-- 1000 ms advertisement duration, retained as the known-working MELPO value
-- 15-minute state refresh by default
 
-## Upstream project
+## Upstream
 
-For the general FastCon component documentation and group-light support, see:
+Primary upstream:
 
 - https://github.com/scross01/esphome-fastcon
 
-## References
+Original project:
 
-See [docs/REFERENCES.md](docs/REFERENCES.md).
+- https://github.com/dennispg/esphome-fastcon
+
+See [docs/REFERENCES.md](docs/REFERENCES.md) for the other protocol and
+implementation references used during the MELPO investigation.
 
 ## License
 

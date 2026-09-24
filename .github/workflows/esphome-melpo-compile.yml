@@ -3,13 +3,15 @@ name: ESPHome MELPO compile
 on:
   push:
     branches:
-      - melpo
+      - main
     paths:
       - "components/fastcon/**"
       - "packages/**"
       - "tests/**"
       - ".github/workflows/esphome-melpo-compile.yml"
   pull_request:
+    branches:
+      - main
     paths:
       - "components/fastcon/**"
       - "packages/**"

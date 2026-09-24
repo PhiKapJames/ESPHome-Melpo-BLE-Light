@@ -1,8 +1,8 @@
 # MELPO-specific changes
 
-The `melpo` branch is intentionally a small patch set on top of
-`scross01/esphome-fastcon@dev`. The fork's `dev` branch should remain clean
-so GitHub can track and sync upstream normally.
+The `main` branch contains the MELPO release patch set. The fork's `dev`
+branch remains aligned with `scross01/esphome-fastcon@dev` for upstream
+tracking.
 
 ## 1. Correct manufacturer AD length
 
@@ -12,7 +12,7 @@ Upstream uses:
 cmd.data.size() + 2
 ```
 
-The MELPO branch uses:
+The MELPO release uses:
 
 ```cpp
 cmd.data.size() + 3
@@ -31,19 +31,19 @@ The known-working MELPO packet uses:
 - `ADV_TYPE_IND`
 - advertising flags byte `0x02`
 
-The upstream controller currently uses `ADV_TYPE_NONCONN_IND` and the usual
-ESP BLE general-discoverable + BR/EDR-not-supported flags.
+Upstream currently uses `ADV_TYPE_NONCONN_IND` and the usual ESP BLE
+general-discoverable + BR/EDR-not-supported flags.
 
 These values were validated on the physical MELPO flood but were not isolated
 independently from the other advertising fixes.
 
-**Status:** keep on the MELPO branch; they remain candidates for a future
-controlled A/B test.
+**Status:** keep on the MELPO release; candidates for a future controlled A/B
+test.
 
 ## 3. GAP-event-driven advertising lifecycle
 
 ESP-IDF BLE GAP configuration/start/stop operations are asynchronous. The MELPO
-branch waits for completion events before advancing:
+release waits for completion events before advancing:
 
 ```text
 IDLE
@@ -72,30 +72,31 @@ Detailed raw advertisement and GAP sequencing logs use `VERY_VERBOSE`.
 Normal startup configuration remains at `CONFIG`; normal light operations
 remain at `DEBUG`.
 
-**Status:** keep, but do not normally run the device at VERY_VERBOSE.
+**Status:** keep, but do not normally run the device at VERY_VERBOSE unless
+diagnosing protocol/radio behavior.
 
 ## 5. Periodic state reassertion
 
 FastCon/brMesh bulbs do not provide authoritative state feedback to this
-component. The light platform therefore adds a configurable `refresh_interval`. The generic component defaults to `never`; the MELPO Flood Bridge package sets:
+component. The FastCon light platform adds a configurable
+`refresh_interval`.
+
+The generic component defaults to:
 
 ```yaml
-refresh_interval: 15min
+refresh_interval: never
 ```
 
+The MELPO device configuration passes a 15-minute interval through package
+`vars`.
+
 Every interval, the component resends the exact current ESPHome light state
-without altering or republishing the Home Assistant state.
+without changing or republishing the Home Assistant state.
 
 A refresh is skipped if:
 
 - a light transition is currently active, or
 - the FastCon command queue is already busy.
-
-The interval can be changed per light or disabled with:
-
-```yaml
-refresh_interval: never
-```
 
 **Status:** MELPO reliability feature; keep.
 
@@ -110,5 +111,6 @@ The MELPO package also uses:
 - `restore_mode: RESTORE_DEFAULT_OFF`.
 - passive BLE diagnostic scanning.
 
-`wifi.output_power` is deliberately site-specific and belongs only in the
-local/private YAML.
+Standard ESPHome device configuration and site-specific values are intentionally
+not part of the public package. This includes Wi-Fi credentials, API encryption,
+OTA setup, logger settings, and `wifi.output_power`.
