@@ -40,10 +40,34 @@ light::LightTraits FastconGroupLight::get_traits() {
   return traits;
 }
 
+void FastconGroupLight::set_refresh_enabled(bool enabled) {
+  this->refresh_enabled_ = enabled;
+  this->update_refresh_schedule_();
+}
+
+void FastconGroupLight::set_refresh_interval_minutes(float minutes) {
+  if (minutes < 1.0f)
+    minutes = 1.0f;
+
+  this->refresh_interval_ = static_cast<uint32_t>(minutes * 60000.0f + 0.5f);
+  this->update_refresh_schedule_();
+}
+
+float FastconGroupLight::get_refresh_interval_minutes() const {
+  if (this->refresh_interval_ == SCHEDULER_DONT_RUN)
+    return 15.0f;
+  return this->refresh_interval_ / 60000.0f;
+}
+
 void FastconGroupLight::setup_state(light::LightState *state) {
   this->state_ = state;
+  this->update_refresh_schedule_();
+}
 
-  if (this->refresh_interval_ == SCHEDULER_DONT_RUN)
+void FastconGroupLight::update_refresh_schedule_() {
+  this->cancel_interval("state_refresh");
+
+  if (!this->refresh_enabled_ || this->refresh_interval_ == SCHEDULER_DONT_RUN || this->state_ == nullptr)
     return;
 
   this->set_interval("state_refresh", this->refresh_interval_, [this]() {

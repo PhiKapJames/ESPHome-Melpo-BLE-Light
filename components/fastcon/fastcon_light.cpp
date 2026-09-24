@@ -38,30 +38,49 @@ light::LightTraits FastconLight::get_traits() {
   return t;
 }
 
+void FastconLight::set_refresh_enabled(bool enabled) {
+  this->refresh_enabled_ = enabled;
+  this->update_refresh_schedule_();
+}
+
+void FastconLight::set_refresh_interval_minutes(float minutes) {
+  if (minutes < 1.0f)
+    minutes = 1.0f;
+
+  this->refresh_interval_ = static_cast<uint32_t>(minutes * 60000.0f + 0.5f);
+  this->update_refresh_schedule_();
+}
+
+float FastconLight::get_refresh_interval_minutes() const {
+  if (this->refresh_interval_ == SCHEDULER_DONT_RUN)
+    return 15.0f;
+  return this->refresh_interval_ / 60000.0f;
+}
+
 void FastconLight::setup_state(light::LightState *state) {
   this->state_ = state;
+  this->update_refresh_schedule_();
+}
 
-  if (this->refresh_interval_ == SCHEDULER_DONT_RUN) {
-    ESP_LOGCONFIG(TAG, "Periodic state refresh disabled for light %u", (unsigned) this->light_id_);
+void FastconLight::update_refresh_schedule_() {
+  this->cancel_interval("state_refresh");
+
+  if (!this->refresh_enabled_ || this->refresh_interval_ == SCHEDULER_DONT_RUN || this->state_ == nullptr) {
     return;
   }
 
-  ESP_LOGCONFIG(TAG, "Periodic state refresh for light %u: %" PRIu32 "s", (unsigned) this->light_id_,
-                this->refresh_interval_ / 1000);
+  ESP_LOGD(TAG, "Scheduling periodic refresh for light %u every %" PRIu32 "s",
+           (unsigned) this->light_id_, this->refresh_interval_ / 1000);
 
   this->set_interval("state_refresh", this->refresh_interval_, [this]() {
     if (this->state_ == nullptr || this->controller_ == nullptr)
       return;
 
-    // A transition is already driving write_state(); don't inject another
-    // hardware write in the middle of it.
     if (this->state_->is_transformer_active()) {
       ESP_LOGV(TAG, "Skipping periodic refresh for light %u: transition active", (unsigned) this->light_id_);
       return;
     }
 
-    // If a real command is queued, it already represents a newer desired
-    // state. Avoid adding a stale/duplicate periodic command behind it.
     if (!this->controller_->is_queue_empty()) {
       ESP_LOGV(TAG, "Skipping periodic refresh for light %u: FastCon queue busy", (unsigned) this->light_id_);
       return;
