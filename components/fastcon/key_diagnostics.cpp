@@ -1,5 +1,7 @@
 #include "key_diagnostics.h"
 
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
+
 #include "fastcon_controller.h"
 #include "esphome/core/log.h"
 
@@ -30,3 +32,5 @@ void FastconKeyListenerSwitch::write_state(bool state) {
 
 }  // namespace fastcon
 }  // namespace esphome
+
+#endif  // USE_FASTCON_KEY_DIAGNOSTICS

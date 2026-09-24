@@ -3,8 +3,12 @@
 #include "esphome/components/light/color_mode.h"
 #include "esphome/components/light/light_state.h"
 #include "fastcon_controller.h"
-#include "key_diagnostics.h"
 #include "protocol.h"
+
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
+#include "key_diagnostics.h"
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
 
 #ifndef FASTCON_VERSION
 #define FASTCON_VERSION "0.3.2-dev"
@@ -219,6 +223,7 @@ void FastconController::gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_
 }
 
 
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
 bool FastconController::decode_fastcon_rf_body_(const std::vector<uint8_t> &rf_payload,
                                                 std::array<uint8_t, 16> &body) const {
   // Standard FastCon commands expose 24 bytes after the 0xFFF0 manufacturer ID:
@@ -368,7 +373,13 @@ void FastconController::publish_detected_key_(const std::array<uint8_t, 4> &key,
     this->key_listener_switch_->publish_state(false);
 }
 
+#endif
+
 bool FastconController::parse_device(const ble_device_base::ESPBTDevice &device) {
+#ifndef USE_FASTCON_KEY_DIAGNOSTICS
+  (void) device;
+  return false;
+#else
   if (!this->key_listener_enabled_)
     return false;
 
@@ -396,6 +407,7 @@ bool FastconController::parse_device(const ble_device_base::ESPBTDevice &device)
   }
 
   return false;
+#endif
 }
 
 // --- helpers for channel resolution ---

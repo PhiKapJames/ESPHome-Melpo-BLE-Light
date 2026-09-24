@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef USE_FASTCON_KEY_DIAGNOSTICS
+
 #include "esphome/components/switch/switch.h"
 #include "esphome/core/component.h"
 
@@ -23,3 +25,5 @@ class FastconKeyListenerSwitch : public Component, public switch_::Switch {
 
 }  // namespace fastcon
 }  // namespace esphome
+
+#endif  // USE_FASTCON_KEY_DIAGNOSTICS

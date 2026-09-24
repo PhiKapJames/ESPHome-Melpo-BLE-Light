@@ -33,5 +33,8 @@ jobs:
       - name: Install ESPHome
         run: pip install "esphome==2026.9.0"
 
-      - name: Compile multi-light FastCon smoke test
+      - name: Compile FastCon without diagnostics
+        run: esphome compile tests/melpo-no-diagnostics.yaml
+
+      - name: Compile multi-light FastCon diagnostics test
         run: esphome compile tests/melpo-component.yaml

@@ -1,0 +1,37 @@
+esphome:
+  name: fastcon-minimal-ci
+
+esp32:
+  variant: esp32s3
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+
+esp32_ble:
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components:
+      - fastcon
+
+fastcon:
+  id: fastcon_controller
+  adv_duration: 1000
+
+light:
+  - platform: fastcon
+    id: fastcon_minimal_light
+    name: "FastCon Minimal CI"
+    controller_id: fastcon_controller
+    mesh_key: "31323334"
+    light_id: 1
+    refresh_interval: 15min
+    supports_cwww: false
+    color_interlock: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 0s
