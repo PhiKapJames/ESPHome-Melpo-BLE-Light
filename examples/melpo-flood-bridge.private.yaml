@@ -1,0 +1,27 @@
+# LOCAL/PRIVATE ESPHome configuration example.
+#
+# Keep your populated copy outside the public repository.
+
+substitutions:
+  melpo_wifi_ssid: !secret wifi_ssid
+  melpo_wifi_password: !secret wifi_password
+  melpo_api_encryption_key: !secret api_encryption_key
+  melpo_flood_key: !secret melpo_flood_key
+
+  # Optional local overrides:
+  melpo_light_id: "1"
+  melpo_light_name: "Melpo Flood"
+  melpo_refresh_interval: "15min"
+
+packages:
+  melpo_flood_bridge:
+    url: https://github.com/PhiKapJames/ESPHome-Melpo-BLE-Light
+    files:
+      - packages/melpo-flood-bridge.yaml
+    ref: melpo
+    refresh: 1h
+
+# Keep RF/Wi-Fi tuning local to the deployment rather than baking it into
+# the public package. Add your desired output_power here in your private copy.
+wifi:
+  # output_power: <your local value>

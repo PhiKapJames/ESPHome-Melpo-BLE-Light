@@ -1,0 +1,119 @@
+# Public ESPHome package for the MELPO Flood Bridge.
+#
+# Private/site-specific values are supplied by the importing YAML through
+# substitutions. wifi.output_power is intentionally NOT defined here.
+
+substitutions:
+  melpo_bridge_name: "melpo-flood-bridge"
+  melpo_bridge_friendly_name: "Melpo Flood Bridge"
+  melpo_light_name: "Melpo Flood"
+  melpo_light_id: "1"
+  melpo_refresh_interval: "15min"
+
+  # Override these from the private/local YAML.
+  melpo_wifi_ssid: ""
+  melpo_wifi_password: ""
+  melpo_api_encryption_key: ""
+  melpo_flood_key: ""
+
+esphome:
+  name: ${melpo_bridge_name}
+  friendly_name: ${melpo_bridge_friendly_name}
+
+esp32:
+  variant: esp32s3
+  flash_size: 4MB
+  framework:
+    type: esp-idf
+
+logger:
+  level: VERY_VERBOSE
+  initial_level: DEBUG
+
+api:
+  encryption:
+    key: ${melpo_api_encryption_key}
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: ${melpo_wifi_ssid}
+  password: ${melpo_wifi_password}
+
+# -----------------------------------------------------------------------------
+# BLE
+# -----------------------------------------------------------------------------
+
+esp32_ble:
+
+esp32_ble_tracker:
+  scan_parameters:
+    # FastCon manufacturer data is present in the advertisement itself; no
+    # scan-response request is required for bridge diagnostics.
+    active: false
+    interval: 320ms
+    window: 160ms
+    continuous: true
+
+  on_ble_manufacturer_data_advertise:
+    - manufacturer_id: "FFF0"
+      then:
+        - lambda: |-
+            std::string hex;
+            char buf[3];
+
+            for (uint8_t b : x) {
+              snprintf(buf, sizeof(buf), "%02X", b);
+              hex += buf;
+            }
+
+            // Available when runtime logging is raised to VERY_VERBOSE.
+            ESP_LOGVV(
+              "melpo.status",
+              "FASTCON RX len=%u data=%s",
+              (unsigned) x.size(),
+              hex.c_str()
+            );
+
+# -----------------------------------------------------------------------------
+# MELPO-patched FastCon component from this fork/branch
+# -----------------------------------------------------------------------------
+
+external_components:
+  - source: github://PhiKapJames/ESPHome-Melpo-BLE-Light@melpo
+    components: [fastcon]
+    refresh: 1h
+
+# -----------------------------------------------------------------------------
+# FastCon controller
+# -----------------------------------------------------------------------------
+
+fastcon:
+  id: fastcon_controller
+  mesh_key: ${melpo_flood_key}
+
+  # Upstream defaults are retained except for advertisement duration.
+  # 1000 ms is the known-working value validated with the MELPO flood.
+  adv_duration: 1000
+
+# -----------------------------------------------------------------------------
+# MELPO flood
+# -----------------------------------------------------------------------------
+
+light:
+  - platform: fastcon
+    id: melpo_flood_id_1
+    name: ${melpo_light_name}
+    light_id: ${melpo_light_id}
+    controller_id: fastcon_controller
+
+    supports_cwww: false
+    color_interlock: true
+
+    # FastCon has no authoritative state feedback from the flood. Reassert
+    # ESPHome/Home Assistant's current state periodically as a safety net.
+    refresh_interval: ${melpo_refresh_interval}
+
+    restore_mode: RESTORE_DEFAULT_OFF
+    default_transition_length: 0s
