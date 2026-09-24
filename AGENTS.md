@@ -45,6 +45,11 @@ The optional controller diagnostics provide:
 
 The listener supports recovery from validated normal single-light control packets and validated provisioning packets.
 
+When diagnostics are configured, the private ESPHome YAML should normally set
+`esp32_ble_tracker.scan_parameters.active: false` and `continuous: false`.
+The FastCon diagnostic switch starts a one-shot scan and only stops the tracker
+when FastCon itself started that scan.
+
 QR-code recovery is not currently part of the project.
 
 ## Validation

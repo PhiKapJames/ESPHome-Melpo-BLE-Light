@@ -16,9 +16,7 @@ esp32_ble:
 esp32_ble_tracker:
   scan_parameters:
     active: false
-    interval: 320ms
-    window: 160ms
-    continuous: true
+    continuous: false
 
 external_components:
   - source:

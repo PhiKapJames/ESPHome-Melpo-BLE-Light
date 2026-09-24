@@ -180,9 +180,7 @@ esp32_ble:
 esp32_ble_tracker:
   scan_parameters:
     active: false
-    interval: 320ms
-    window: 160ms
-    continuous: true
+    continuous: false
 
 fastcon:
   id: fastcon_controller
@@ -210,6 +208,16 @@ Usage:
 The listener recognizes both validated normal control traffic and validated
 FastCon provisioning traffic. It is based on over-the-air BLE advertisements,
 not Android logcat.
+
+With `continuous: false`, the ESP32 BLE tracker stays idle during normal
+operation. Turning **FastCon Mesh Key Listener** on starts a one-shot scan.
+Finding a key, manually turning the listener off, or reaching the scan-duration
+timeout ends the FastCon diagnostic session. FastCon only stops the tracker when
+it was the component that started that scan; an already-running scan owned by
+another component is left alone.
+
+ESPHome already defaults the scan interval to 320 ms, so no interval/window
+override is required for this diagnostic use case.
 
 See [docs/PROVISIONING.md](docs/PROVISIONING.md) for protocol details,
 validation rules, and current limitations.

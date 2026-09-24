@@ -19,9 +19,7 @@ esp32_ble:
 esp32_ble_tracker:
   scan_parameters:
     active: false
-    interval: 320ms
-    window: 160ms
-    continuous: true
+    continuous: false
 
 fastcon:
   id: fastcon_controller
@@ -36,7 +34,20 @@ fastcon:
 
 The BLE tracker is only needed for receive-side diagnostics. Normal FastCon command transmission does not otherwise require it.
 
-After a valid key is found, the text sensor publishes the key and the listener switch turns itself off.
+The recommended private-YAML overrides are only:
+
+- `active: false` — passive listening; no scan requests are transmitted.
+- `continuous: false` — the tracker remains idle until FastCon starts a diagnostic scan.
+
+ESPHome's normal scan interval/duration defaults remain in effect. Turning the
+listener switch on starts a one-shot tracker scan. After a valid key is found,
+the text sensor publishes the key, the listener switches itself off, and
+FastCon stops the scan if it was the component that started it. If another
+component had already started the tracker, FastCon listens without taking
+ownership and does not stop that scan.
+
+If the one-shot scan reaches its configured duration without finding a key, the
+listener switch is automatically returned to OFF.
 
 ## Recovery from normal control traffic
 

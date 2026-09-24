@@ -31,6 +31,13 @@ wifi:
 
 esp32_ble:
 
+# Required only when using FastCon mesh-key diagnostics.
+# ESPHome owns the tracker; FastCon starts/stops it on demand.
+esp32_ble_tracker:
+  scan_parameters:
+    active: false
+    continuous: false
+
 external_components:
   - source: github://PhiKapJames/ESPHome-Melpo-BLE-Light@main
     components:
@@ -39,6 +46,12 @@ external_components:
 
 fastcon:
   id: fastcon_controller
+
+  diagnostics:
+    mesh_key_listener:
+      name: "FastCon Mesh Key Listener"
+    detected_mesh_key:
+      name: "FastCon Detected Mesh Key"
 
   # The upstream default remains 50 ms. 1000 ms is the known-working value
   # for the MELPO flood used during development.
