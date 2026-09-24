@@ -1,7 +1,7 @@
 substitutions:
   melpo_wifi_ssid: "MELPO-CI"
   melpo_wifi_password: "ci-password-123"
-  melpo_api_encryption_key: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  melpo_api_encryption_key: "AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA="
   melpo_flood_key: "31323334"
   melpo_light_id: "1"
   melpo_refresh_interval: "15min"
